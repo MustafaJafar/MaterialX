@@ -3119,6 +3119,164 @@
   </nodegraph>
 
   <!--
+    Node: <mincomponent>
+    Output the minimum component of the incoming vector or color stream.
+  -->
+  <nodegraph name="NG_mincomponent_color3" nodedef="ND_mincomponent_color3">
+    <separate3 name="N_separate" type="multioutput">
+      <input name="in" type="color3" interfacename="in" />
+    </separate3>
+    <min name="N_min_01" type="float">
+      <input name="in1" type="float" nodename="N_separate" output="outr" />
+      <input name="in2" type="float" nodename="N_separate" output="outg" />
+    </min>
+    <min name="N_min" type="float">
+      <input name="in1" type="float" nodename="N_min_01" />
+      <input name="in2" type="float" nodename="N_separate" output="outb" />
+    </min>
+    <output name="out" type="float" nodename="N_min" />
+  </nodegraph>
+  <nodegraph name="NG_mincomponent_color4" nodedef="ND_mincomponent_color4">
+    <separate4 name="N_separate" type="multioutput">
+      <input name="in" type="color4" interfacename="in" />
+    </separate4>
+    <min name="N_min_01" type="float">
+      <input name="in1" type="float" nodename="N_separate" output="outr" />
+      <input name="in2" type="float" nodename="N_separate" output="outg" />
+    </min>
+    <min name="N_min_23" type="float">
+      <input name="in1" type="float" nodename="N_separate" output="outb" />
+      <input name="in2" type="float" nodename="N_separate" output="outa" />
+    </min>
+    <min name="N_min" type="float">
+      <input name="in1" type="float" nodename="N_min_01" />
+      <input name="in2" type="float" nodename="N_min_23" />
+    </min>
+    <output name="out" type="float" nodename="N_min" />
+  </nodegraph>
+  <nodegraph name="NG_mincomponent_vector2" nodedef="ND_mincomponent_vector2">
+    <separate2 name="N_separate" type="multioutput">
+      <input name="in" type="vector2" interfacename="in" />
+    </separate2>
+    <min name="N_min" type="float">
+      <input name="in1" type="float" nodename="N_separate" output="outx" />
+      <input name="in2" type="float" nodename="N_separate" output="outy" />
+    </min>
+    <output name="out" type="float" nodename="N_min" />
+  </nodegraph>
+  <nodegraph name="NG_mincomponent_vector3" nodedef="ND_mincomponent_vector3">
+    <separate3 name="N_separate" type="multioutput">
+      <input name="in" type="vector3" interfacename="in" />
+    </separate3>
+    <min name="N_min_01" type="float">
+      <input name="in1" type="float" nodename="N_separate" output="outx" />
+      <input name="in2" type="float" nodename="N_separate" output="outy" />
+    </min>
+    <min name="N_min" type="float">
+      <input name="in1" type="float" nodename="N_min_01" />
+      <input name="in2" type="float" nodename="N_separate" output="outz" />
+    </min>
+    <output name="out" type="float" nodename="N_min" />
+  </nodegraph>
+  <nodegraph name="NG_mincomponent_vector4" nodedef="ND_mincomponent_vector4">
+    <separate4 name="N_separate" type="multioutput">
+      <input name="in" type="vector4" interfacename="in" />
+    </separate4>
+    <min name="N_min_01" type="float">
+      <input name="in1" type="float" nodename="N_separate" output="outx" />
+      <input name="in2" type="float" nodename="N_separate" output="outy" />
+    </min>
+    <min name="N_min_23" type="float">
+      <input name="in1" type="float" nodename="N_separate" output="outz" />
+      <input name="in2" type="float" nodename="N_separate" output="outw" />
+    </min>
+    <min name="N_min" type="float">
+      <input name="in1" type="float" nodename="N_min_01" />
+      <input name="in2" type="float" nodename="N_min_23" />
+    </min>
+    <output name="out" type="float" nodename="N_min" />
+  </nodegraph>
+
+  <!--
+    Node: <maxcomponent>
+    Output the maximum component of the incoming vector or color stream.
+  -->
+  <nodegraph name="NG_maxcomponent_color3" nodedef="ND_maxcomponent_color3">
+    <separate3 name="N_separate" type="multioutput">
+      <input name="in" type="color3" interfacename="in" />
+    </separate3>
+    <max name="N_max_01" type="float">
+      <input name="in1" type="float" nodename="N_separate" output="outr" />
+      <input name="in2" type="float" nodename="N_separate" output="outg" />
+    </max>
+    <max name="N_max" type="float">
+      <input name="in1" type="float" nodename="N_max_01" />
+      <input name="in2" type="float" nodename="N_separate" output="outb" />
+    </max>
+    <output name="out" type="float" nodename="N_max" />
+  </nodegraph>
+  <nodegraph name="NG_maxcomponent_color4" nodedef="ND_maxcomponent_color4">
+    <separate4 name="N_separate" type="multioutput">
+      <input name="in" type="color4" interfacename="in" />
+    </separate4>
+    <max name="N_max_01" type="float">
+      <input name="in1" type="float" nodename="N_separate" output="outr" />
+      <input name="in2" type="float" nodename="N_separate" output="outg" />
+    </max>
+    <max name="N_max_23" type="float">
+      <input name="in1" type="float" nodename="N_separate" output="outb" />
+      <input name="in2" type="float" nodename="N_separate" output="outa" />
+    </max>
+    <max name="N_max" type="float">
+      <input name="in1" type="float" nodename="N_max_01" />
+      <input name="in2" type="float" nodename="N_max_23" />
+    </max>
+    <output name="out" type="float" nodename="N_max" />
+  </nodegraph>
+  <nodegraph name="NG_maxcomponent_vector2" nodedef="ND_maxcomponent_vector2">
+    <separate2 name="N_separate" type="multioutput">
+      <input name="in" type="vector2" interfacename="in" />
+    </separate2>
+    <max name="N_max" type="float">
+      <input name="in1" type="float" nodename="N_separate" output="outx" />
+      <input name="in2" type="float" nodename="N_separate" output="outy" />
+    </max>
+    <output name="out" type="float" nodename="N_max" />
+  </nodegraph>
+  <nodegraph name="NG_maxcomponent_vector3" nodedef="ND_maxcomponent_vector3">
+    <separate3 name="N_separate" type="multioutput">
+      <input name="in" type="vector3" interfacename="in" />
+    </separate3>
+    <max name="N_max_01" type="float">
+      <input name="in1" type="float" nodename="N_separate" output="outx" />
+      <input name="in2" type="float" nodename="N_separate" output="outy" />
+    </max>
+    <max name="N_max" type="float">
+      <input name="in1" type="float" nodename="N_max_01" />
+      <input name="in2" type="float" nodename="N_separate" output="outz" />
+    </max>
+    <output name="out" type="float" nodename="N_max" />
+  </nodegraph>
+  <nodegraph name="NG_maxcomponent_vector4" nodedef="ND_maxcomponent_vector4">
+    <separate4 name="N_separate" type="multioutput">
+      <input name="in" type="vector4" interfacename="in" />
+    </separate4>
+    <max name="N_max_01" type="float">
+      <input name="in1" type="float" nodename="N_separate" output="outx" />
+      <input name="in2" type="float" nodename="N_separate" output="outy" />
+    </max>
+    <max name="N_max_23" type="float">
+      <input name="in1" type="float" nodename="N_separate" output="outz" />
+      <input name="in2" type="float" nodename="N_separate" output="outw" />
+    </max>
+    <max name="N_max" type="float">
+      <input name="in1" type="float" nodename="N_max_01" />
+      <input name="in2" type="float" nodename="N_max_23" />
+    </max>
+    <output name="out" type="float" nodename="N_max" />
+  </nodegraph>
+
+  <!--
     Node: <distance>
     Measures the distance between two points in 2D, 3D, or 4D.
   -->
@@ -3978,10 +4136,18 @@
       <input name="outlow" type="float" interfacename="outlow" />
       <input name="outhigh" type="float" interfacename="outhigh" />
     </remap>
+    <min name="N_min_float" type="float">
+      <input name="in1" type="float" interfacename="outlow" />
+      <input name="in2" type="float" interfacename="outhigh" />
+    </min>
+    <max name="N_max_float" type="float">
+      <input name="in1" type="float" interfacename="outlow" />
+      <input name="in2" type="float" interfacename="outhigh" />
+    </max>
     <clamp name="N_clamp_float" type="float">
       <input name="in" type="float" nodename="N_remap2_float" />
-      <input name="low" type="float" interfacename="outlow" />
-      <input name="high" type="float" interfacename="outhigh" />
+      <input name="low" type="float" nodename="N_min_float" />
+      <input name="high" type="float" nodename="N_max_float" />
     </clamp>
     <ifequal name="N_switch_float" type="float">
       <input name="in1" type="float" nodename="N_clamp_float" />
@@ -4024,10 +4190,18 @@
       <input name="outlow" type="color3" interfacename="outlow" />
       <input name="outhigh" type="color3" interfacename="outhigh" />
     </remap>
+    <min name="N_min_color3" type="color3">
+      <input name="in1" type="color3" interfacename="outlow" />
+      <input name="in2" type="color3" interfacename="outhigh" />
+    </min>
+    <max name="N_max_color3" type="color3">
+      <input name="in1" type="color3" interfacename="outlow" />
+      <input name="in2" type="color3" interfacename="outhigh" />
+    </max>
     <clamp name="N_clamp_color3" type="color3">
       <input name="in" type="color3" nodename="N_remap2_color3" />
-      <input name="low" type="color3" interfacename="outlow" />
-      <input name="high" type="color3" interfacename="outhigh" />
+      <input name="low" type="color3" nodename="N_min_color3" />
+      <input name="high" type="color3" nodename="N_max_color3" />
     </clamp>
     <ifequal name="N_switch_color3" type="color3">
       <input name="in1" type="color3" nodename="N_clamp_color3" />
@@ -4070,10 +4244,18 @@
       <input name="outlow" type="color4" interfacename="outlow" />
       <input name="outhigh" type="color4" interfacename="outhigh" />
     </remap>
+    <min name="N_min_color4" type="color4">
+      <input name="in1" type="color4" interfacename="outlow" />
+      <input name="in2" type="color4" interfacename="outhigh" />
+    </min>
+    <max name="N_max_color4" type="color4">
+      <input name="in1" type="color4" interfacename="outlow" />
+      <input name="in2" type="color4" interfacename="outhigh" />
+    </max>
     <clamp name="N_clamp_color4" type="color4">
       <input name="in" type="color4" nodename="N_remap2_color4" />
-      <input name="low" type="color4" interfacename="outlow" />
-      <input name="high" type="color4" interfacename="outhigh" />
+      <input name="low" type="color4" nodename="N_min_color4" />
+      <input name="high" type="color4" nodename="N_max_color4" />
     </clamp>
     <ifequal name="N_switch_color4" type="color4">
       <input name="in1" type="color4" nodename="N_clamp_color4" />
@@ -4116,10 +4298,18 @@
       <input name="outlow" type="vector2" interfacename="outlow" />
       <input name="outhigh" type="vector2" interfacename="outhigh" />
     </remap>
+    <min name="N_min_vector2" type="vector2">
+      <input name="in1" type="vector2" interfacename="outlow" />
+      <input name="in2" type="vector2" interfacename="outhigh" />
+    </min>
+    <max name="N_max_vector2" type="vector2">
+      <input name="in1" type="vector2" interfacename="outlow" />
+      <input name="in2" type="vector2" interfacename="outhigh" />
+    </max>
     <clamp name="N_clamp_vector2" type="vector2">
       <input name="in" type="vector2" nodename="N_remap2_vector2" />
-      <input name="low" type="vector2" interfacename="outlow" />
-      <input name="high" type="vector2" interfacename="outhigh" />
+      <input name="low" type="vector2" nodename="N_min_vector2" />
+      <input name="high" type="vector2" nodename="N_max_vector2" />
     </clamp>
     <ifequal name="N_switch_vector2" type="vector2">
       <input name="in1" type="vector2" nodename="N_clamp_vector2" />
@@ -4162,10 +4352,18 @@
       <input name="outlow" type="vector3" interfacename="outlow" />
       <input name="outhigh" type="vector3" interfacename="outhigh" />
     </remap>
+    <min name="N_min_vector3" type="vector3">
+      <input name="in1" type="vector3" interfacename="outlow" />
+      <input name="in2" type="vector3" interfacename="outhigh" />
+    </min>
+    <max name="N_max_vector3" type="vector3">
+      <input name="in1" type="vector3" interfacename="outlow" />
+      <input name="in2" type="vector3" interfacename="outhigh" />
+    </max>
     <clamp name="N_clamp_vector3" type="vector3">
       <input name="in" type="vector3" nodename="N_remap2_vector3" />
-      <input name="low" type="vector3" interfacename="outlow" />
-      <input name="high" type="vector3" interfacename="outhigh" />
+      <input name="low" type="vector3" nodename="N_min_vector3" />
+      <input name="high" type="vector3" nodename="N_max_vector3" />
     </clamp>
     <ifequal name="N_switch_vector3" type="vector3">
       <input name="in1" type="vector3" nodename="N_clamp_vector3" />
@@ -4208,10 +4406,18 @@
       <input name="outlow" type="vector4" interfacename="outlow" />
       <input name="outhigh" type="vector4" interfacename="outhigh" />
     </remap>
+    <min name="N_min_vector4" type="vector4">
+      <input name="in1" type="vector4" interfacename="outlow" />
+      <input name="in2" type="vector4" interfacename="outhigh" />
+    </min>
+    <max name="N_max_vector4" type="vector4">
+      <input name="in1" type="vector4" interfacename="outlow" />
+      <input name="in2" type="vector4" interfacename="outhigh" />
+    </max>
     <clamp name="N_clamp_vector4" type="vector4">
       <input name="in" type="vector4" nodename="N_remap2_vector4" />
-      <input name="low" type="vector4" interfacename="outlow" />
-      <input name="high" type="vector4" interfacename="outhigh" />
+      <input name="low" type="vector4" nodename="N_min_vector4" />
+      <input name="high" type="vector4" nodename="N_max_vector4" />
     </clamp>
     <ifequal name="N_switch_vector4" type="vector4">
       <input name="in1" type="vector4" nodename="N_clamp_vector4" />
@@ -4254,10 +4460,18 @@
       <input name="outlow" type="float" interfacename="outlow" />
       <input name="outhigh" type="float" interfacename="outhigh" />
     </remap>
+    <min name="N_min_color3FA" type="float">
+      <input name="in1" type="float" interfacename="outlow" />
+      <input name="in2" type="float" interfacename="outhigh" />
+    </min>
+    <max name="N_max_color3FA" type="float">
+      <input name="in1" type="float" interfacename="outlow" />
+      <input name="in2" type="float" interfacename="outhigh" />
+    </max>
     <clamp name="N_clamp_color3FA" type="color3">
       <input name="in" type="color3" nodename="N_remap2_color3FA" />
-      <input name="low" type="float" interfacename="outlow" />
-      <input name="high" type="float" interfacename="outhigh" />
+      <input name="low" type="float" nodename="N_min_color3FA" />
+      <input name="high" type="float" nodename="N_max_color3FA" />
     </clamp>
     <ifequal name="N_switch_color3FA" type="color3">
       <input name="in1" type="color3" nodename="N_clamp_color3FA" />
@@ -4300,10 +4514,18 @@
       <input name="outlow" type="float" interfacename="outlow" />
       <input name="outhigh" type="float" interfacename="outhigh" />
     </remap>
+    <min name="N_min_color4FA" type="float">
+      <input name="in1" type="float" interfacename="outlow" />
+      <input name="in2" type="float" interfacename="outhigh" />
+    </min>
+    <max name="N_max_color4FA" type="float">
+      <input name="in1" type="float" interfacename="outlow" />
+      <input name="in2" type="float" interfacename="outhigh" />
+    </max>
     <clamp name="N_clamp_color4FA" type="color4">
       <input name="in" type="color4" nodename="N_remap2_color4FA" />
-      <input name="low" type="float" interfacename="outlow" />
-      <input name="high" type="float" interfacename="outhigh" />
+      <input name="low" type="float" nodename="N_min_color4FA" />
+      <input name="high" type="float" nodename="N_max_color4FA" />
     </clamp>
     <ifequal name="N_switch_color4FA" type="color4">
       <input name="in1" type="color4" nodename="N_clamp_color4FA" />
@@ -4346,10 +4568,18 @@
       <input name="outlow" type="float" interfacename="outlow" />
       <input name="outhigh" type="float" interfacename="outhigh" />
     </remap>
+    <min name="N_min_vector2FA" type="float">
+      <input name="in1" type="float" interfacename="outlow" />
+      <input name="in2" type="float" interfacename="outhigh" />
+    </min>
+    <max name="N_max_vector2FA" type="float">
+      <input name="in1" type="float" interfacename="outlow" />
+      <input name="in2" type="float" interfacename="outhigh" />
+    </max>
     <clamp name="N_clamp_vector2FA" type="vector2">
       <input name="in" type="vector2" nodename="N_remap2_vector2FA" />
-      <input name="low" type="float" interfacename="outlow" />
-      <input name="high" type="float" interfacename="outhigh" />
+      <input name="low" type="float" nodename="N_min_vector2FA" />
+      <input name="high" type="float" nodename="N_max_vector2FA" />
     </clamp>
     <ifequal name="N_switch_vector2FA" type="vector2">
       <input name="in1" type="vector2" nodename="N_clamp_vector2FA" />
@@ -4392,10 +4622,18 @@
       <input name="outlow" type="float" interfacename="outlow" />
       <input name="outhigh" type="float" interfacename="outhigh" />
     </remap>
+    <min name="N_min_vector3FA" type="float">
+      <input name="in1" type="float" interfacename="outlow" />
+      <input name="in2" type="float" interfacename="outhigh" />
+    </min>
+    <max name="N_max_vector3FA" type="float">
+      <input name="in1" type="float" interfacename="outlow" />
+      <input name="in2" type="float" interfacename="outhigh" />
+    </max>
     <clamp name="N_clamp_vector3FA" type="vector3">
       <input name="in" type="vector3" nodename="N_remap2_vector3FA" />
-      <input name="low" type="float" interfacename="outlow" />
-      <input name="high" type="float" interfacename="outhigh" />
+      <input name="low" type="float" nodename="N_min_vector3FA" />
+      <input name="high" type="float" nodename="N_max_vector3FA" />
     </clamp>
     <ifequal name="N_switch_vector3FA" type="vector3">
       <input name="in1" type="vector3" nodename="N_clamp_vector3FA" />
@@ -4438,10 +4676,18 @@
       <input name="outlow" type="float" interfacename="outlow" />
       <input name="outhigh" type="float" interfacename="outhigh" />
     </remap>
+    <min name="N_min_vector4FA" type="float">
+      <input name="in1" type="float" interfacename="outlow" />
+      <input name="in2" type="float" interfacename="outhigh" />
+    </min>
+    <max name="N_max_vector4FA" type="float">
+      <input name="in1" type="float" interfacename="outlow" />
+      <input name="in2" type="float" interfacename="outhigh" />
+    </max>
     <clamp name="N_clamp_vector4FA" type="vector4">
       <input name="in" type="vector4" nodename="N_remap2_vector4FA" />
-      <input name="low" type="float" interfacename="outlow" />
-      <input name="high" type="float" interfacename="outhigh" />
+      <input name="low" type="float" nodename="N_min_vector4FA" />
+      <input name="high" type="float" nodename="N_max_vector4FA" />
     </clamp>
     <ifequal name="N_switch_vector4FA" type="vector4">
       <input name="in1" type="vector4" nodename="N_clamp_vector4FA" />

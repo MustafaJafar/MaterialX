@@ -7,9 +7,11 @@
 
 #include <MaterialXGenShader/Exception.h>
 #include <MaterialXGenShader/GenContext.h>
+#include <MaterialXGenShader/ShaderGraphRefactor.h>
 #include <MaterialXGenShader/Util.h>
 
-#include <iostream>
+#include <MaterialXTrace/Tracing.h>
+
 #include <queue>
 
 MATERIALX_NAMESPACE_BEGIN
@@ -18,10 +20,12 @@ MATERIALX_NAMESPACE_BEGIN
 // ShaderGraph methods
 //
 
-ShaderGraph::ShaderGraph(const ShaderGraph* parent, const string& name, ConstDocumentPtr document) :
-    ShaderNode(parent, name),
+ShaderGraph::ShaderGraph(const ShaderGraph* parent, const string& name, ConstDocumentPtr document,
+                         GenContext& context)
+  : ShaderNode(parent, name),
     _document(document)
 {
+    context.getShaderGenerator().getSyntax().makeIdentifier(_name, getIdentifierMap());
 }
 
 void ShaderGraph::addInputSockets(const InterfaceElement& elem, GenContext& context)
@@ -51,6 +55,7 @@ void ShaderGraph::addInputSockets(const InterfaceElement& elem, GenContext& cont
         {
             inputSocket->setUniform();
         }
+        inputSocket->setPath(input->getNamePath());
         GeomPropDefPtr geomprop = input->getDefaultGeomProp();
         if (geomprop)
         {
@@ -76,6 +81,8 @@ void ShaderGraph::createConnectedNodes(const ElementPtr& downstreamElement,
                                        ElementPtr connectingElement,
                                        GenContext& context)
 {
+    MX_TRACE_FUNCTION(Tracing::Category::ShaderGen);
+
     // Create the node if it doesn't exist.
     NodePtr upstreamNode = upstreamElement->asA<Node>();
     if (!upstreamNode)
@@ -167,6 +174,9 @@ void ShaderGraph::createConnectedNodes(const ElementPtr& downstreamElement,
 
 void ShaderGraph::addUpstreamDependencies(const Element& root, GenContext& context)
 {
+    MX_TRACE_FUNCTION(Tracing::Category::ShaderGen);
+    MX_TRACE_SCOPE(Tracing::Category::ShaderGen, root.getName().c_str());
+
     std::set<ElementPtr> processedOutputs;
 
     for (Edge edge : root.traverseGraph())
@@ -313,6 +323,12 @@ void ShaderGraph::addColorTransformNode(ShaderInput* input, const ColorSpaceTran
         shaderInput->setValue(input->getValue());
         shaderInput->setPath(input->getPath());
         shaderInput->setUnit(EMPTY_STRING);
+        if (input->isUniform())
+        {
+            // Preserve the uniform flag, so that targets which distinguish uniform
+            // and varying values (e.g. MDL) declare the published value as uniform.
+            shaderInput->setUniform();
+        }
 
         if (input->isBindInput())
         {
@@ -384,6 +400,10 @@ void ShaderGraph::addUnitTransformNode(ShaderInput* input, const UnitTransform& 
         shaderInput->setPath(input->getPath());
         shaderInput->setUnit(input->getUnit());
         shaderInput->setColorSpace(input->getColorSpace());
+        if (input->isUniform())
+        {
+            shaderInput->setUniform();
+        }
 
         if (input->isBindInput())
         {
@@ -436,7 +456,7 @@ ShaderGraphPtr ShaderGraph::create(const ShaderGraph* parent, const NodeGraph& n
 
     string graphName = nodeGraph.getName();
     context.getShaderGenerator().getSyntax().makeValidName(graphName);
-    ShaderGraphPtr graph = std::make_shared<ShaderGraph>(parent, graphName, nodeGraph.getDocument());
+    ShaderGraphPtr graph = std::make_shared<ShaderGraph>(parent, graphName, nodeGraph.getDocument(), context);
 
     // Clear classification
     graph->_classification = 0;
@@ -495,7 +515,7 @@ ShaderGraphPtr ShaderGraph::create(const ShaderGraph* parent, const string& name
             throw ExceptionShaderGenError("Given output '" + output->getName() + "' has no interface valid for shader generation");
         }
 
-        graph = std::make_shared<ShaderGraph>(parent, name, element->getDocument());
+        graph = std::make_shared<ShaderGraph>(parent, name, element->getDocument(), context);
 
         // Clear classification
         graph->_classification = 0;
@@ -531,7 +551,7 @@ ShaderGraphPtr ShaderGraph::create(const ShaderGraph* parent, const string& name
             throw ExceptionShaderGenError("Could not find a nodedef for node '" + node->getName() + "'");
         }
 
-        graph = std::make_shared<ShaderGraph>(parent, name, element->getDocument());
+        graph = std::make_shared<ShaderGraph>(parent, name, element->getDocument(), context);
 
         // Create input sockets
         graph->addInputSockets(*nodeDef, context);
@@ -695,6 +715,9 @@ void ShaderGraph::applyInputTransforms(ConstNodePtr node, ShaderNode* shaderNode
 
 ShaderNode* ShaderGraph::createNode(const string& name, const string& uniqueId, ConstNodeDefPtr nodeDef, GenContext& context)
 {
+    MX_TRACE_FUNCTION(Tracing::Category::ShaderGen);
+    MX_TRACE_SCOPE(Tracing::Category::ShaderGen, name.c_str());
+
     if (!nodeDef)
     {
         throw ExceptionShaderGenError("Could not find a nodedef for node '" + name + "'");
@@ -908,8 +931,18 @@ void ShaderGraph::finalize(GenContext& context)
     _inputUnitTransformMap.clear();
     _outputUnitTransformMap.clear();
 
-    // Optimize the graph, removing redundant paths.
-    optimize(context);
+    // Run registered graph refactoring passes.
+    size_t totalEdits = 0;
+    for (auto& refactor : context.getShaderGenerator().getRefactors())
+    {
+        totalEdits += refactor->execute(*this, context);
+    }
+
+    // Remove unused nodes if any refactoring pass made edits.
+    if (totalEdits > 0)
+    {
+        removeUnusedNodes();
+    }
 
     // Sort the nodes in topological order.
     topologicalSort();
@@ -969,97 +1002,57 @@ void ShaderGraph::disconnect(ShaderNode* node) const
     }
 }
 
-void ShaderGraph::optimize(GenContext& context)
+void ShaderGraph::removeUnusedNodes()
 {
-    size_t numEdits = 0;
-    for (ShaderNode* node : getNodes())
+    std::set<ShaderNode*> usedNodesSet;
+    std::vector<ShaderNode*> usedNodesVec;
+
+    // Traverse the graph to find nodes still in use.
+    for (ShaderGraphOutputSocket* outputSocket : getOutputSockets())
     {
-        if (node->hasClassification(ShaderNode::Classification::CONSTANT))
+        // Make sure to not include connections to the graph itself.
+        ShaderOutput* upstreamPort = outputSocket->getConnection();
+        if (upstreamPort && upstreamPort->getNode() != this)
         {
-            if (node->numInputs() != 1 || node->numOutputs() != 1)
+            for (ShaderGraphEdge edge : traverseUpstream(upstreamPort))
             {
-                // Constant node doesn't follow expected interface, cannot elide.
-                continue;
-            }
-            // Constant nodes can be elided by moving their value downstream.
-            bool canElide = context.getOptions().elideConstantNodes;
-            if (!canElide)
-            {
-                // We always elide filename constant nodes regardless of the
-                // option. See DOT below.
-                ShaderInput* in = node->getInput("value");
-                if (in && in->getType() == Type::FILENAME)
+                ShaderNode* node = edge.upstream->getNode();
+                if (usedNodesSet.count(node) == 0)
                 {
-                    canElide = true;
+                    usedNodesSet.insert(node);
+                    usedNodesVec.push_back(node);
                 }
             }
-            if (canElide)
-            {
-                bypass(node, 0);
-                ++numEdits;
-            }
         }
-        else if (node->hasClassification(ShaderNode::Classification::DOT))
-        {
-            if (node->numOutputs() != 1)
-            {
-                // Dot node dosen't follow expected interface, cannot elide.
-                continue;
-            }
-            // Filename dot nodes must be elided so they do not create extra samplers.
-            ShaderInput* in = node->getInput("in");
-            if (in && in->getType() == Type::FILENAME)
-            {
-                bypass(node, 0);
-                ++numEdits;
-            }
-        }
-        // Adding more nodes here requires them to have an input that is tagged
-        // "uniform" in the NodeDef or to handle very specific cases, like FILENAME.
     }
 
-    if (numEdits > 0)
+    // Remove any unused nodes.
+    for (auto it = _nodeMap.begin(); it != _nodeMap.end();)
     {
-        std::set<ShaderNode*> usedNodesSet;
-        std::vector<ShaderNode*> usedNodesVec;
-
-        // Traverse the graph to find nodes still in use
-        for (ShaderGraphOutputSocket* outputSocket : getOutputSockets())
+        if (usedNodesSet.count(it->second.get()) == 0)
         {
-            // Make sure to not include connections to the graph itself.
-            ShaderOutput* upstreamPort = outputSocket->getConnection();
-            if (upstreamPort && upstreamPort->getNode() != this)
-            {
-                for (ShaderGraphEdge edge : traverseUpstream(upstreamPort))
-                {
-                    ShaderNode* node = edge.upstream->getNode();
-                    if (usedNodesSet.count(node) == 0)
-                    {
-                        usedNodesSet.insert(node);
-                        usedNodesVec.push_back(node);
-                    }
-                }
-            }
-        }
+            // Break all connections.
+            disconnect(it->second.get());
 
-        // Remove any unused nodes
-        for (auto it = _nodeMap.begin(); it != _nodeMap.end();)
+            // Erase from storage.
+            it = _nodeMap.erase(it);
+        }
+        else
         {
-            if (usedNodesSet.count(it->second.get()) == 0)
-            {
-                // Break all connections
-                disconnect(it->second.get());
-
-                // Erase from storage
-                it = _nodeMap.erase(it);
-            }
-            else
-            {
-                ++it;
-            }
+            ++it;
         }
+    }
 
-        _nodeOrder = usedNodesVec;
+    _nodeOrder = usedNodesVec;
+}
+
+void ShaderGraph::replaceOutput(ShaderOutput* oldOutput, ShaderOutput* newOutput)
+{
+    ShaderInputVec downstreamConnections = oldOutput->getConnections();
+    for (ShaderInput* downstream : downstreamConnections)
+    {
+        oldOutput->breakConnection(downstream);
+        downstream->makeConnection(newOutput);
     }
 }
 
@@ -1211,12 +1204,22 @@ void ShaderGraph::setVariableNames(GenContext& context)
 void ShaderGraph::populateColorTransformMap(ColorManagementSystemPtr colorManagementSystem, ShaderPort* shaderPort,
                                             const string& sourceColorSpace, const string& targetColorSpace, bool asInput)
 {
-    if (!shaderPort ||
-        sourceColorSpace.empty() ||
-        targetColorSpace.empty() ||
-        sourceColorSpace == targetColorSpace ||
-        sourceColorSpace == "none" ||
-        targetColorSpace == "none")
+    if (!shaderPort || sourceColorSpace.empty() || targetColorSpace.empty())
+    {
+        return;
+    }
+
+    // A transform that the color management system considers a no-op, such as one between
+    // a legacy color space name and its color interop equivalent, or one involving a no-op
+    // color space such as "data", is omitted from the graph and leaves the port's color
+    // space unset. Without a color management system, only identical names and the
+    // spec-reserved no-op color spaces are recognized.
+    const bool isNoOpTransform = colorManagementSystem ?
+                                 colorManagementSystem->isNoOpTransform(sourceColorSpace, targetColorSpace) :
+                                 sourceColorSpace == targetColorSpace ||
+                                 ColorManagementSystem::isReservedNoOpColorSpace(sourceColorSpace) ||
+                                 ColorManagementSystem::isReservedNoOpColorSpace(targetColorSpace);
+    if (isNoOpTransform)
     {
         return;
     }
@@ -1243,8 +1246,8 @@ void ShaderGraph::populateColorTransformMap(ColorManagementSystemPtr colorManage
             }
             else
             {
-                std::cerr << "Unsupported color space transform from " <<
-                              sourceColorSpace << " to " << targetColorSpace << std::endl;
+                throw ExceptionShaderGenError("Unsupported color space transform from '" +
+                                              sourceColorSpace + "' to '" + targetColorSpace + "'.");
             }
         }
     }
