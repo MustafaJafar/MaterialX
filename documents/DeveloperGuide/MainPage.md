@@ -5,7 +5,6 @@ MaterialX is an open standard for representing rich material and look-developmen
 ## Quick Start for Developers
 
 - Download the latest version of the [CMake](https://cmake.org/) build system.
-- Obtain the MaterialX source code by downloading a [release](https://github.com/AcademySoftwareFoundation/MaterialX/releases) or by cloning the repository, as described in our [Development Workflow](https://github.com/AcademySoftwareFoundation/MaterialX/blob/main/CONTRIBUTING.md#development-workflow).
 - Point CMake to the root of the MaterialX library and generate C++ projects for your platform and compiler.
 - Select the `MATERIALX_BUILD_PYTHON` option to build Python bindings.
 - Select the `MATERIALX_BUILD_VIEWER` option to build the [MaterialX Viewer](https://github.com/AcademySoftwareFoundation/MaterialX/blob/main/documents/DeveloperGuide/Viewer.md).
@@ -57,7 +56,7 @@ To generate HTML documentation for the MaterialX C++ API, make sure a version of
 
 ## Build Methods
 
-MaterialX can be built through the CMake GUI, the CMake command line, or any IDE that supports CMake.  The following sections describe each of these workflows.
+MaterialX can be built through the CMake GUI, the CMake command line, or any IDE that supports CMake.  The following sections describe each of these workflows.  The MaterialX Viewer and Graph Editor depend on Git submodules, so the repository should be cloned recursively before building these components.
 
 ### CMake GUI
 
